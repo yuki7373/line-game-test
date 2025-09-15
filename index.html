@@ -113,16 +113,16 @@ function startSpin(){
   }
 }
 
-// 滑らか回転
+// 滑らか回転（上から下に回転）
 function spinReel(index){
   const reel = document.getElementById('reel'+(index+1));
   let pos = -reelHeight; // 中央ライン位置
   const speed = 2 + Math.random()*1; // 回転速度
   function animate(){
     if(!spinning[index]) return;
-    pos -= speed;
+    pos += speed;  // 下方向に増やす
     const totalHeight = symbols.length*reelHeight; 
-    if(pos >= totalHeight) pos = 0;
+    if(pos >= totalHeight) pos = 0; // ループ
     reel.style.transform = `translateY(-${pos}px)`;
     animFrame[index] = requestAnimationFrame(animate);
   }
@@ -146,7 +146,7 @@ function stopReel(index){
   reel.style.transition = 'transform 0.5s ease-out';
   reel.style.transform = `translateY(-${reelHeight}px)`;
 
-  // トランジション終了後に解除して再度スムーズ回転可能に
+  // トランジション終了後に解除
   reel.addEventListener('transitionend', ()=>{
     reel.style.transition = '';
   }, {once:true});
