@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>上から下スロット</title>
+<title>上から下スロット修正版</title>
 <style>
 body {
   margin:0; padding:0;
@@ -20,7 +19,8 @@ body {
 }
 .reels {
   display:flex; justify-content:space-between;
-  margin-bottom:10px; height:180px; overflow:hidden;
+  margin-bottom:10px; height:180px; /* 3行分 */
+  overflow:hidden;
   border:3px solid #555; border-radius:10px; background:#000;
 }
 .reel {
@@ -30,8 +30,9 @@ body {
 }
 .reel-inner {
   display:flex; flex-direction:column; align-items:center;
+  position:absolute;
+  top:-300%; /* 上から下へ流れる開始位置 */
   width:100%; font-size:50px;
-  position:relative;
 }
 .reel-inner div {
   height:60px; line-height:60px;
@@ -84,87 +85,68 @@ body {
 <script>
 const symbols = ['🍒','🍋','🍉','🍊','⭐','7'];
 let spinning = [false,false,false];
-let animFrame = [null,null,null];
-const reelHeight = 60; // 1行の高さ
+let animFrame=[null,null,null];
 
-// リール初期化（2回繰り返し）
-function initReels(){
-  for(let i=1;i<=3;i++){
-    const reel = document.getElementById('reel'+i);
-    reel.innerHTML = '';
-    for(let r=0;r<2;r++){
-      symbols.forEach(s=>{
-        const div = document.createElement('div');
-        div.innerText = s;
-        reel.appendChild(div);
-      });
-    }
-    reel.style.transform = `translateY(-${reelHeight}px)`;
+// 初期化（リールにシンボルを並べる・2周分入れる）
+for(let i=1;i<=3;i++){
+  const reel=document.getElementById('reel'+i);
+  reel.innerHTML='';
+  for(let s=0;s<symbols.length*2;s++){
+    const div=document.createElement('div');
+    div.innerText=symbols[s%symbols.length];
+    reel.appendChild(div);
   }
 }
-initReels();
 
 // スピン開始
 function startSpin(){
-  document.getElementById('result').innerText = "";
+  document.getElementById('result').innerText="";
   document.getElementById('gogoLamp').classList.remove('on');
   for(let i=0;i<3;i++){
-    spinning[i] = true;
+    spinning[i]=true;
     spinReel(i);
   }
 }
 
-// 上から下に滑らか回転
+// リール回転（上から下へ）
 function spinReel(index){
-  const reel = document.getElementById('reel'+(index+1));
-  let pos = -reelHeight;
-  const speed = 2 + Math.random()*1;
+  const reel=document.getElementById('reel'+(index+1));
+  let pos=-300; // %指定
+  let speed=10+Math.random()*5;
   function animate(){
     if(!spinning[index]) return;
-    pos -= speed;  // 上から下に回転
-    const totalHeight = symbols.length*reelHeight;
-    if(pos <= -totalHeight) pos = 0;
-    reel.style.transform = `translateY(${pos}px)`;
-    animFrame[index] = requestAnimationFrame(animate);
+    pos+=speed;
+    if(pos>=0) pos=-300; // 無限ループ
+    reel.style.top=pos+'%';
+    animFrame[index]=requestAnimationFrame(animate);
   }
   animate();
 }
 
-// STOPボタン
+// STOP処理
 function stopReel(index){
   if(!spinning[index]) return;
-  spinning[index] = false;
+  spinning[index]=false;
   cancelAnimationFrame(animFrame[index]);
-  const reel = document.getElementById('reel'+(index+1));
+  const reel=document.getElementById('reel'+(index+1));
 
-  // 現在位置に最も近い中央絵柄に合わせる
-  const currentY = parseFloat(reel.style.transform.replace('translateY(','').replace('px)',''));
-  let nearestIndex = Math.round(-currentY/reelHeight) % symbols.length;
-  if(nearestIndex<0) nearestIndex += symbols.length;
+  // ランダムシンボル決定
+  let chosen=symbols[Math.floor(Math.random()*symbols.length)];
+  Array.from(reel.children).forEach(s=>s.innerText=chosen);
 
-  // 中央に来るように再配置
-  Array.from(reel.children).forEach((c,i)=>{
-    c.innerText = symbols[(nearestIndex + i) % symbols.length];
-  });
-
-  // 中央ラインにスムーズに停止
-  reel.style.transition = 'transform 0.5s ease-out';
-  reel.style.transform = `translateY(-${reelHeight}px)`;
-  reel.addEventListener('transitionend', ()=>{
-    reel.style.transition = '';
-  }, {once:true});
-
+  // 中央に揃える
+  reel.style.top='-100%';
   checkResult();
 }
 
-// 中央ライン判定
+// 結果判定（中央横ライン）
 function checkResult(){
   if(spinning.some(s=>s)) return;
-  const final = Array.from(document.querySelectorAll('.reel-inner')).map(r=>r.children[1].innerText);
+  const final=Array.from(document.querySelectorAll('.reel-inner')).map(r=>r.children[1].innerText);
   if(final[0]===final[1] && final[1]===final[2]){
     document.getElementById('result').innerText="🎉 BIG WIN! 🎉";
     document.getElementById('gogoLamp').classList.add('on');
-  } else {
+  }else{
     document.getElementById('result').innerText="ハズレ…";
   }
 }
