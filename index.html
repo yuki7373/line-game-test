@@ -95,16 +95,21 @@ function initReels(){
   for(let i=1;i<=3;i++){
     const reel=document.getElementById('reel'+i);
     reel.innerHTML='';
-    for(let r=0;r<2;r++){
-      symbols.forEach(s=>{
-        const div=document.createElement('div');
-        div.innerText=s;
-        reel.insertBefore(div, reel.firstChild);
-      });
-    }
+    // まず通常の1周
+    symbols.forEach(s=>{
+      const div=document.createElement('div');
+      div.innerText=s;
+      reel.appendChild(div);
+    });
+    // もう1周は「そのままの順序」で下に追加
+    symbols.forEach(s=>{
+      const div=document.createElement('div');
+      div.innerText=s;
+      reel.appendChild(div);
+    });
   }
 }
-initReels();
+
 
 // スピン開始
 function startSpin(){
