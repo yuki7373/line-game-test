@@ -1,1 +1,1 @@
-# line-game-test
+# slot_gameのテストです。
