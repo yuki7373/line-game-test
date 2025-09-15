@@ -3,75 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ジャグラー風スロット 3x3</title>
+<title>ジャグラー風スロット 3x3 改良版</title>
 <style>
 body {
-  margin: 0; padding: 0;
-  background: #222; color: #fff;
-  display: flex; justify-content: center; align-items: center;
-  height: 100vh; font-family: sans-serif;
+  margin:0;padding:0;
+  background:#222;color:#fff;
+  display:flex;justify-content:center;align-items:center;
+  height:100vh;font-family:sans-serif;
 }
-.slot-container {
-  position: relative;
-  text-align: center;
-  background: #111;
-  border: 10px solid gold;
-  border-radius: 20px;
-  padding: 20px;
-  width: 90vw;
-  max-width: 400px;
+.slot-container{
+  position:relative;text-align:center;
+  background:#111;border:10px solid gold;border-radius:20px;
+  padding:20px;width:90vw;max-width:400px;
 }
-.reels {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  height: 180px; /* 3行分 */
-  overflow: hidden;
-  border: 3px solid #555;
-  border-radius: 10px;
-  background: #000;
-  position: relative;
+.reels{
+  display:flex;justify-content:space-between;
+  margin-bottom:10px;height:180px;overflow:hidden;
+  border:3px solid #555;border-radius:10px;background:#000;
 }
-.reel {
-  flex: 1;
-  overflow: hidden;
-  border-left: 1px solid #555;
-  border-right: 1px solid #555;
-  position: relative;
+.reel{
+  flex:1;overflow:hidden;border-left:1px solid #555;border-right:1px solid #555;
+  position:relative;
 }
-.reel-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: absolute;
-  top: -300%; /* 上から回転開始 */
-  width: 100%;
-  font-size: 50px;
+.reel-inner{
+  display:flex;flex-direction:column;align-items:center;
+  position:absolute;top:-100%;width:100%;font-size:50px;
 }
-.buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
+.buttons{
+  display:flex;justify-content:space-between;margin-bottom:10px;
 }
-.buttons button {
-  flex: 1; margin: 0 5px; padding: 8px 0;
-  font-size: 16px; border-radius: 10px;
-  border: none; background: gold; color: #000; cursor: pointer;
+.buttons button{
+  flex:1;margin:0 5px;padding:8px 0;
+  font-size:16px;border-radius:10px;
+  border:none;background:gold;color:#000;cursor:pointer;
 }
-.lever {
-  width: 40px; height: 80px;
-  background: red; border-radius: 20px;
-  margin: 0 auto 10px; cursor: pointer;
+.lever{
+  width:40px;height:80px;
+  background:red;border-radius:20px;
+  margin:0 auto 10px;cursor:pointer;
 }
-.gogo-lamp {
-  position: absolute; left: 10px; bottom: 10px;
-  width: 30px; height: 30px;
-  background: #444; border-radius: 50%;
-  box-shadow: 0 0 10px #000;
-  transition: 0.3s;
+.gogo-lamp{
+  position:absolute;left:10px;bottom:10px;
+  width:30px;height:30px;
+  background:#444;border-radius:50%;
+  box-shadow:0 0 10px #000;
+  transition:0.3s;
 }
-.gogo-lamp.on {
-  background: yellow; box-shadow: 0 0 20px yellow;
+.gogo-lamp.on{
+  background:yellow;box-shadow:0 0 20px yellow;
 }
 </style>
 </head>
@@ -97,21 +76,24 @@ body {
 
 <script>
 const symbols = ['🍒','🍋','🍉','🍊','⭐','7'];
-let spinning = [false,false,false];
+let spinning=[false,false,false];
 let animFrame=[null,null,null];
 
-// 初期化：リール3x3（縦スクロール用に6絵柄ずつ）
-for(let i=1;i<=3;i++){
-  const reel = document.getElementById('reel'+i);
-  reel.innerHTML='';
-  for(let s=0;s<symbols.length*2;s++){
-    let span = document.createElement('div');
-    span.innerText = symbols[s%symbols.length];
-    reel.appendChild(span);
+// リール初期化（3行＋上下補助行）
+function initReels(){
+  for(let i=1;i<=3;i++){
+    const reel = document.getElementById('reel'+i);
+    reel.innerHTML='';
+    for(let s=0;s<symbols.length*3;s++){
+      const span=document.createElement('div');
+      span.innerText=symbols[s%symbols.length];
+      reel.appendChild(span);
+    }
+    reel.style.top='-100%'; // 中央ラインに合わせる
   }
 }
+initReels();
 
-// スピン開始
 function startSpin(){
   document.getElementById('result').innerText="";
   document.getElementById('gogoLamp').classList.remove('on');
@@ -121,37 +103,38 @@ function startSpin(){
   }
 }
 
-// スロット風アニメーション
 function spinReel(index){
-  const reel = document.getElementById('reel'+(index+1));
-  let pos=-300; // start
-  let speed=10+Math.random()*5; // 回転速度を少しランダムに
+  const reel=document.getElementById('reel'+(index+1));
+  let pos=parseFloat(reel.style.top);
+  const speed=1+Math.random()*0.5; // 遅めで自然
   function animate(){
     if(!spinning[index]) return;
     pos+=speed;
-    if(pos>=0) pos=-300;
+    if(pos>=0) pos=-100;
     reel.style.top=pos+'%';
     animFrame[index]=requestAnimationFrame(animate);
   }
   animate();
 }
 
-// ストップボタン
 function stopReel(index){
   if(!spinning[index]) return;
   spinning[index]=false;
   cancelAnimationFrame(animFrame[index]);
-  const reel = document.getElementById('reel'+(index+1));
+  const reel=document.getElementById('reel'+(index+1));
+  // 停止時はランダムに中央行に絵柄を揃える
   let chosen=symbols[Math.floor(Math.random()*symbols.length)];
-  Array.from(reel.children).forEach(s=>s.innerText=chosen);
-  reel.style.top='-100%'; // 中央行に表示
+  Array.from(reel.children).forEach((s,i)=>{
+    s.innerText=symbols[(symbols.indexOf(chosen)+i)%symbols.length];
+  });
+  reel.style.top='-100%';
   checkResult();
 }
 
-// 有効ライン判定（中央横一列）
+// 中央ライン判定
 function checkResult(){
   if(spinning.some(s=>s)) return;
-  const final = Array.from(document.querySelectorAll('.reel-inner')).map(r=>r.children[1].innerText);
+  const final=Array.from(document.querySelectorAll('.reel-inner')).map(r=>r.children[1].innerText);
   if(final[0]===final[1] && final[1]===final[2]){
     document.getElementById('result').innerText="🎉 BIG WIN! 🎉";
     document.getElementById('gogoLamp').classList.add('on');
