@@ -1,29 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>じゃんけんゲーム</title>
+  <title>スロットゲーム</title>
+  <style>
+    #slot {
+      font-size: 50px;
+      margin-bottom: 20px;
+    }
+  </style>
 </head>
 <body>
-  <h1>じゃんけん！</h1>
-  <button onclick="play('✊')">✊</button>
-  <button onclick="play('✋')">✋</button>
-  <button onclick="play('✌')">✌</button>
+  <h1>スロットゲーム！</h1>
+  <div id="slot">🍒 🍋 🍉</div>
+  <button onclick="spin()">スピン</button>
   <p id="result"></p>
 
   <script>
-    function play(userHand) {
-      const hands = ['✊','✋','✌'];
-      const cpuHand = hands[Math.floor(Math.random()*3)];
+    const symbols = ['🍒','🍋','🍉','🍊','⭐','7'];
+
+    function spin() {
+      // 3つのリールの絵柄をランダムで決定
+      const reel1 = symbols[Math.floor(Math.random()*symbols.length)];
+      const reel2 = symbols[Math.floor(Math.random()*symbols.length)];
+      const reel3 = symbols[Math.floor(Math.random()*symbols.length)];
+
+      // スロット画面に表示
+      document.getElementById("slot").innerText = `${reel1} ${reel2} ${reel3}`;
+
+      // 結果判定
       let result;
-      if(userHand === cpuHand) result = "あいこ！";
-      else if(
-        (userHand==='✊' && cpuHand==='✌') ||
-        (userHand==='✋' && cpuHand==='✊') ||
-        (userHand==='✌' && cpuHand==='✋')
-      ) result = "勝ち！";
-      else result = "負け！";
-      document.getElementById("result").innerText = 
-        `あなた:${userHand} CPU:${cpuHand} → ${result}`;
+      if(reel1 === reel2 && reel2 === reel3) {
+        result = "🎉 当たり！🎉";
+      } else {
+        result = "ハズレ…";
+      }
+      document.getElementById("result").innerText = result;
     }
   </script>
 </body>
