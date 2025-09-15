@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ジャグラー風スロット 3x3 改良版</title>
+<title>ジャグラー風スロット 滑らか版</title>
 <style>
 body {
   margin:0;padding:0;
@@ -27,7 +27,10 @@ body {
 }
 .reel-inner{
   display:flex;flex-direction:column;align-items:center;
-  position:absolute;top:-100%;width:100%;font-size:50px;
+  width:100%;font-size:50px;
+}
+.reel-inner div{
+  height:60px; line-height:60px;
 }
 .buttons{
   display:flex;justify-content:space-between;margin-bottom:10px;
@@ -51,6 +54,15 @@ body {
 }
 .gogo-lamp.on{
   background:yellow;box-shadow:0 0 20px yellow;
+}
+
+/* 滑らか回転アニメーション */
+@keyframes spin {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); } /* 中央3行の分だけ移動 */
+}
+.reel-inner.spinning{
+  animation: spin 1.5s linear infinite; /* 回転速度調整 */
 }
 </style>
 </head>
@@ -76,20 +88,20 @@ body {
 
 <script>
 const symbols = ['🍒','🍋','🍉','🍊','⭐','7'];
-let spinning=[false,false,false];
-let animFrame=[null,null,null];
+let spinning = [false,false,false];
 
-// リール初期化（3行＋上下補助行）
 function initReels(){
   for(let i=1;i<=3;i++){
-    const reel = document.getElementById('reel'+i);
+    const reel=document.getElementById('reel'+i);
     reel.innerHTML='';
-    for(let s=0;s<symbols.length*3;s++){
-      const span=document.createElement('div');
-      span.innerText=symbols[s%symbols.length];
-      reel.appendChild(span);
+    // 3行＋繰り返しで滑らかに
+    for(let r=0;r<2;r++){
+      symbols.forEach(s=>{
+        const div=document.createElement('div');
+        div.innerText=s;
+        reel.appendChild(div);
+      });
     }
-    reel.style.top='-100%'; // 中央ラインに合わせる
   }
 }
 initReels();
@@ -99,42 +111,29 @@ function startSpin(){
   document.getElementById('gogoLamp').classList.remove('on');
   for(let i=0;i<3;i++){
     spinning[i]=true;
-    spinReel(i);
+    document.getElementById('reel'+(i+1)).classList.add('spinning');
   }
-}
-
-function spinReel(index){
-  const reel=document.getElementById('reel'+(index+1));
-  let pos=parseFloat(reel.style.top);
-  const speed=1+Math.random()*0.5; // 遅めで自然
-  function animate(){
-    if(!spinning[index]) return;
-    pos+=speed;
-    if(pos>=0) pos=-100;
-    reel.style.top=pos+'%';
-    animFrame[index]=requestAnimationFrame(animate);
-  }
-  animate();
 }
 
 function stopReel(index){
   if(!spinning[index]) return;
   spinning[index]=false;
-  cancelAnimationFrame(animFrame[index]);
   const reel=document.getElementById('reel'+(index+1));
-  // 停止時はランダムに中央行に絵柄を揃える
-  let chosen=symbols[Math.floor(Math.random()*symbols.length)];
-  Array.from(reel.children).forEach((s,i)=>{
-    s.innerText=symbols[(symbols.indexOf(chosen)+i)%symbols.length];
+  reel.classList.remove('spinning');
+
+  // 中央ラインにランダム絵柄を揃える
+  const chosen = symbols[Math.floor(Math.random()*symbols.length)];
+  const children = Array.from(reel.children);
+  children.forEach((c,i)=>{
+    c.innerText = symbols[(symbols.indexOf(chosen)+i)%symbols.length];
   });
-  reel.style.top='-100%';
+
   checkResult();
 }
 
-// 中央ライン判定
 function checkResult(){
   if(spinning.some(s=>s)) return;
-  const final=Array.from(document.querySelectorAll('.reel-inner')).map(r=>r.children[1].innerText);
+  const final = Array.from(document.querySelectorAll('.reel-inner')).map(r=>r.children[1].innerText);
   if(final[0]===final[1] && final[1]===final[2]){
     document.getElementById('result').innerText="🎉 BIG WIN! 🎉";
     document.getElementById('gogoLamp').classList.add('on');
