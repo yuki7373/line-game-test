@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ジャグラー風スロット 3x3 完全版</title>
+<title>上から下スロット</title>
 <style>
 body {
   margin:0; padding:0;
@@ -86,7 +86,7 @@ let spinning = [false,false,false];
 let animFrame = [null,null,null];
 const reelHeight = 60; // 1行の高さ
 
-// リール初期化（2回繰り返しでループ用）
+// リール初期化（2回繰り返し）
 function initReels(){
   for(let i=1;i<=3;i++){
     const reel = document.getElementById('reel'+i);
@@ -98,7 +98,7 @@ function initReels(){
         reel.appendChild(div);
       });
     }
-    reel.style.transform = `translateY(-${reelHeight}px)`; // 中央ラインに合わせる
+    reel.style.transform = `translateY(-${reelHeight}px)`;
   }
 }
 initReels();
@@ -113,17 +113,17 @@ function startSpin(){
   }
 }
 
-// 滑らか回転（上から下に回転）
+// 上から下に滑らか回転
 function spinReel(index){
   const reel = document.getElementById('reel'+(index+1));
-  let pos = -reelHeight; // 中央ライン位置
-  const speed = 2 + Math.random()*1; // 回転速度
+  let pos = -reelHeight;
+  const speed = 2 + Math.random()*1;
   function animate(){
     if(!spinning[index]) return;
-    pos += speed;  // 下方向に増やす
-    const totalHeight = symbols.length*reelHeight; 
-    if(pos >= totalHeight) pos = 0; // ループ
-    reel.style.transform = `translateY(-${pos}px)`;
+    pos -= speed;  // 上から下に回転
+    const totalHeight = symbols.length*reelHeight;
+    if(pos <= -totalHeight) pos = 0;
+    reel.style.transform = `translateY(${pos}px)`;
     animFrame[index] = requestAnimationFrame(animate);
   }
   animate();
@@ -136,17 +136,19 @@ function stopReel(index){
   cancelAnimationFrame(animFrame[index]);
   const reel = document.getElementById('reel'+(index+1));
 
-  // 中央ラインにランダム絵柄を揃える
-  const chosen = symbols[Math.floor(Math.random()*symbols.length)];
+  // 現在位置に最も近い中央絵柄に合わせる
+  const currentY = parseFloat(reel.style.transform.replace('translateY(','').replace('px)',''));
+  let nearestIndex = Math.round(-currentY/reelHeight) % symbols.length;
+  if(nearestIndex<0) nearestIndex += symbols.length;
+
+  // 中央に来るように再配置
   Array.from(reel.children).forEach((c,i)=>{
-    c.innerText = symbols[(symbols.indexOf(chosen)+i)%symbols.length];
+    c.innerText = symbols[(nearestIndex + i) % symbols.length];
   });
 
   // 中央ラインにスムーズに停止
   reel.style.transition = 'transform 0.5s ease-out';
   reel.style.transform = `translateY(-${reelHeight}px)`;
-
-  // トランジション終了後に解除
   reel.addEventListener('transitionend', ()=>{
     reel.style.transition = '';
   }, {once:true});
