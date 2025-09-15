@@ -80,18 +80,18 @@ body {
   <div class="gogo-lamp" id="gogoLamp"></div>
 </div>
 
-<script>
 const symbols = ['🍒','🍋','🍉','🍊','⭐','7'];
 let spinning = [false,false,false];
 let animFrame = [null,null,null];
 const reelHeight = 60; // 1行の高さ
+const loopCount = 5;   // 何周分シンボルを並べるか
 
-// リール初期化（3周分並べる）
+// リール初期化（多めに並べる）
 function initReels(){
   for(let i=1;i<=3;i++){
     const reel = document.getElementById('reel'+i);
     reel.innerHTML = '';
-    for(let r=0;r<3;r++){ // 3周分
+    for(let r=0;r<loopCount;r++){ 
       symbols.forEach(s=>{
         const div = document.createElement('div');
         div.innerText = s;
@@ -116,13 +116,13 @@ function startSpin(){
 function spinReel(index){
   const reel = document.getElementById('reel'+(index+1));
   let pos = 0; 
-  const speed = 5 + Math.random()*2;
+  const speed = 8 + Math.random()*2;
 
   function animate(){
     if(!spinning[index]) return;
-    pos += speed; // 下方向に動かす
-    const totalHeight = symbols.length * reelHeight * 3; // 3周分の高さ
-    pos = pos % totalHeight; // ループさせる
+    pos += speed; // 下方向
+    const totalHeight = symbols.length * reelHeight * loopCount;
+    pos = pos % totalHeight; // ループ
     reel.style.transform = `translateY(${pos}px)`; 
     animFrame[index] = requestAnimationFrame(animate);
   }
@@ -134,24 +134,20 @@ function stopReel(index){
   if(!spinning[index]) return;
   spinning[index] = false;
   cancelAnimationFrame(animFrame[index]);
-  const reel = document.getElementById('reel'+(index+1));
 
-  // 現在位置
+  const reel = document.getElementById('reel'+(index+1));
   const currentY = parseFloat(reel.style.transform.replace('translateY(','').replace('px)','')) || 0;
 
-  // どのシンボルに一番近いか（中央に揃える）
+  // 今の位置から一番近い「中央ライン」のインデックスを計算
   let nearestIndex = Math.round(currentY / reelHeight) % symbols.length;
-
   if(nearestIndex < 0) nearestIndex += symbols.length;
 
-  // 子要素を並べ替え
-  Array.from(reel.children).forEach((c,i)=>{
-    c.innerText = symbols[(nearestIndex + i) % symbols.length];
-  });
+  // その柄がちょうど中央に来る位置を計算
+  const targetY = nearestIndex * reelHeight;
 
-  // 真ん中にスムーズに停止
-  reel.style.transition = 'transform 0.4s ease-out';
-  reel.style.transform = `translateY(${reelHeight}px)`;
+  // スムーズにそこまでだけ動かす
+  reel.style.transition = 'transform 0.3s ease-out';
+  reel.style.transform = `translateY(${targetY}px)`;
   reel.addEventListener('transitionend', ()=>{
     reel.style.transition = '';
   }, {once:true});
@@ -170,7 +166,7 @@ function checkResult(){
     document.getElementById('result').innerText="ハズレ…";
   }
 }
-</script>
+
 
 </body>
 </html>
