@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>上から下スロット修正版（自然速度&柄維持）</title>
+<title>ジャグラー風スロット 修正版</title>
 <style>
 body {
   margin:0; padding:0;
@@ -31,7 +31,7 @@ body {
 .reel-inner {
   display:flex; flex-direction:column; align-items:center;
   position:absolute;
-  top:-300%; /* 上から下へ流れる開始位置 */
+  top:0;
   width:100%; font-size:50px;
 }
 .reel-inner div {
@@ -86,18 +86,25 @@ body {
 const symbols = ['🍒','🍋','🍉','🍊','⭐','7'];
 let spinning = [false,false,false];
 let animFrame=[null,null,null];
-let positions=[-300,-300,-300]; // 各リールの現在位置（%）
+let positions=[0,0,0];
+const rowHeight = 60;
+const reelLength = symbols.length * rowHeight * 2; // 2周分
 
-// 初期化（リールにシンボルを並べる・2周分入れる）
-for(let i=1;i<=3;i++){
-  const reel=document.getElementById('reel'+i);
-  reel.innerHTML='';
-  for(let s=0;s<symbols.length*2;s++){
-    const div=document.createElement('div');
-    div.innerText=symbols[s%symbols.length];
-    reel.appendChild(div);
+// 初期化：リールにシンボルを2回繰り返しで配置
+function initReels(){
+  for(let i=1;i<=3;i++){
+    const reel=document.getElementById('reel'+i);
+    reel.innerHTML='';
+    for(let r=0;r<2;r++){
+      symbols.forEach(s=>{
+        const div=document.createElement('div');
+        div.innerText=s;
+        reel.appendChild(div);
+      });
+    }
   }
 }
+initReels();
 
 // スピン開始
 function startSpin(){
@@ -109,15 +116,15 @@ function startSpin(){
   }
 }
 
-// リール回転（上から下へ）
+// リール回転
 function spinReel(index){
   const reel=document.getElementById('reel'+(index+1));
-  let speed=1.5+Math.random()*0.5; // ★スピード遅め＆ちょっとランダム
+  let speed=2+Math.random()*1;
   function animate(){
     if(!spinning[index]) return;
     positions[index]+=speed;
-    if(positions[index]>=0) positions[index]=-300; // 無限ループ
-    reel.style.top=positions[index]+'%';
+    if(positions[index]>=reelLength/2) positions[index]=0; // ループ
+    reel.style.top=(-positions[index])+'px';
     animFrame[index]=requestAnimationFrame(animate);
   }
   animate();
@@ -130,16 +137,12 @@ function stopReel(index){
   cancelAnimationFrame(animFrame[index]);
 
   const reel=document.getElementById('reel'+(index+1));
-  const rowHeight=100/ symbols.length; // 1絵柄分の比率（%）
-  const currentPos=positions[index];
+  const pos=positions[index];
+  let nearest=Math.round(pos/rowHeight); // 最寄り行
+  positions[index]=nearest*rowHeight;
 
-  // 現在位置から一番近い「揃え位置」にスナップ
-  let nearest=Math.round(currentPos/(-100/symbols.length));
-  positions[index]=nearest*(-100/symbols.length);
-
-  // 停止アニメーション
   reel.style.transition='top 0.3s ease-out';
-  reel.style.top=positions[index]+'%';
+  reel.style.top=(-positions[index])+'px';
   reel.addEventListener('transitionend',()=>{
     reel.style.transition='';
   },{once:true});
@@ -147,11 +150,15 @@ function stopReel(index){
   checkResult();
 }
 
-// 結果判定（中央横ライン）
+// 結果判定（中央行を比較）
 function checkResult(){
   if(spinning.some(s=>s)) return;
-  // 真ん中の行を取得（children[1]ではなく現在位置から計算するほうが正確だけど簡易版で）
-  const final=Array.from(document.querySelectorAll('.reel-inner')).map(r=>r.children[1].innerText);
+  const final=[];
+  document.querySelectorAll('.reel-inner').forEach((reel,idx)=>{
+    let row=Math.floor(positions[idx]/rowHeight)+1; // 中央行
+    let symbol=reel.children[row % symbols.length].innerText;
+    final.push(symbol);
+  });
   if(final[0]===final[1] && final[1]===final[2]){
     document.getElementById('result').innerText="🎉 BIG WIN! 🎉";
     document.getElementById('gogoLamp').classList.add('on');
