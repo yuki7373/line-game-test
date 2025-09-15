@@ -1,41 +1,103 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <title>スロットゲーム</title>
-  <style>
-    #slot {
-      font-size: 50px;
-      margin-bottom: 20px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ジャグラー風スロット</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #222;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: sans-serif;
+  }
+  .slot-container {
+    text-align: center;
+    background: #111;
+    border: 10px solid gold;
+    border-radius: 20px;
+    padding: 20px;
+    width: 300px;
+  }
+  .reels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    height: 80px;
+    overflow: hidden;
+    border: 3px solid #555;
+    border-radius: 10px;
+    background: #000;
+  }
+  .reel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    font-size: 50px;
+    transition: transform 0.5s ease-out;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 20px;
+    border: none;
+    border-radius: 10px;
+    background: gold;
+    color: #000;
+    cursor: pointer;
+  }
+</style>
 </head>
 <body>
-  <h1>スロットゲーム！</h1>
-  <div id="slot">🍒 🍋 🍉</div>
+
+<div class="slot-container">
+  <div class="reels">
+    <div class="reel" id="reel1">🍒</div>
+    <div class="reel" id="reel2">🍋</div>
+    <div class="reel" id="reel3">🍉</div>
+  </div>
   <button onclick="spin()">スピン</button>
   <p id="result"></p>
+</div>
 
-  <script>
-    const symbols = ['🍒','🍋','🍉','🍊','⭐','7'];
+<script>
+const symbols = ['🍒','🍋','🍉','🍊','⭐','7'];
 
-    function spin() {
-      // 3つのリールの絵柄をランダムで決定
-      const reel1 = symbols[Math.floor(Math.random()*symbols.length)];
-      const reel2 = symbols[Math.floor(Math.random()*symbols.length)];
-      const reel3 = symbols[Math.floor(Math.random()*symbols.length)];
+function spin() {
+  const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
 
-      // スロット画面に表示
-      document.getElementById("slot").innerText = `${reel1} ${reel2} ${reel3}`;
-
-      // 結果判定
-      let result;
-      if(reel1 === reel2 && reel2 === reel3) {
-        result = "🎉 当たり！🎉";
-      } else {
-        result = "ハズレ…";
+  reels.forEach((reel, index) => {
+    let spins = 10 + Math.floor(Math.random() * 10); // くるくる回る回数
+    let currentIndex = 0;
+    let interval = setInterval(() => {
+      reel.innerText = symbols[currentIndex % symbols.length];
+      currentIndex++;
+      spins--;
+      if (spins <= 0) {
+        clearInterval(interval);
       }
-      document.getElementById("result").innerText = result;
+    }, 100 + index*50); // リールごとに速度を少しずらす
+  });
+
+  // 結果判定は少し遅らせる
+  setTimeout(() => {
+    const final = reels.map(r => r.innerText);
+    let result;
+    if(final[0] === final[1] && final[1] === final[2]){
+      result = "🎉 BIG WIN! 🎉";
+    } else {
+      result = "ハズレ…";
     }
-  </script>
+    document.getElementById('result').innerText = result;
+  }, 1500);
+}
+</script>
+
 </body>
 </html>
