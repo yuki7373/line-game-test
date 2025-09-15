@@ -120,14 +120,15 @@ function spinReel(index){
 
   function animate(){
     if(!spinning[index]) return;
-    pos -= speed; // 減らすと下方向に流れる
+    pos += speed; // 増やすと「下方向」に流れる
     const totalHeight = symbols.length*reelHeight;
-    if(pos <= -totalHeight) pos = 0;
-    reel.style.transform = `translateY(${pos}px)`;
+    if(pos >= totalHeight) pos = 0;
+    reel.style.transform = `translateY(${pos}px)`; 
     animFrame[index] = requestAnimationFrame(animate);
   }
   animate();
 }
+
 
 // STOPボタン
 function stopReel(index){
