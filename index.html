@@ -17,40 +17,73 @@
     font-family: sans-serif;
   }
   .slot-container {
+    position: relative;
     text-align: center;
     background: #111;
-    border: 10px solid gold;
+    border: 8px solid gold;
     border-radius: 20px;
     padding: 20px;
-    width: 300px;
+    width: 90vw;
+    max-width: 400px;
   }
   .reels {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     height: 80px;
     overflow: hidden;
     border: 3px solid #555;
     border-radius: 10px;
     background: #000;
+    position: relative;
   }
   .reel {
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
     align-items: center;
     font-size: 50px;
-    transition: transform 0.5s ease-out;
+    transition: transform 0.1s linear;
   }
-  button {
-    padding: 10px 20px;
-    font-size: 20px;
-    border: none;
+  .buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .buttons button {
+    flex: 1;
+    margin: 0 5px;
+    padding: 8px 0;
+    font-size: 16px;
     border-radius: 10px;
+    border: none;
     background: gold;
     color: #000;
     cursor: pointer;
+  }
+  .lever {
+    width: 40px;
+    height: 80px;
+    background: red;
+    border-radius: 20px;
+    margin: 0 auto 10px;
+    cursor: pointer;
+    position: relative;
+  }
+  .gogo-lamp {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    width: 30px;
+    height: 30px;
+    background: #444;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #000;
+    transition: 0.3s;
+  }
+  .gogo-lamp.on {
+    background: yellow;
+    box-shadow: 0 0 20px yellow;
   }
 </style>
 </head>
@@ -62,40 +95,54 @@
     <div class="reel" id="reel2">🍋</div>
     <div class="reel" id="reel3">🍉</div>
   </div>
-  <button onclick="spin()">スピン</button>
+  
+  <div class="buttons">
+    <button onclick="stopReel(0)">STOP 1</button>
+    <button onclick="stopReel(1)">STOP 2</button>
+    <button onclick="stopReel(2)">STOP 3</button>
+  </div>
+
+  <div class="lever" onclick="startSpin()"></div>
   <p id="result"></p>
+  <div class="gogo-lamp" id="gogoLamp"></div>
 </div>
 
 <script>
 const symbols = ['🍒','🍋','🍉','🍊','⭐','7'];
+let reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+let spinning = [false, false, false];
+let intervals = [];
 
-function spin() {
-  const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+function startSpin() {
+  document.getElementById('result').innerText = "";
+  document.getElementById('gogoLamp').classList.remove('on');
+  
+  // 全リール開始
+  for(let i=0; i<3; i++){
+    spinning[i] = true;
+    intervals[i] = setInterval(() => {
+      reels[i].innerText = symbols[Math.floor(Math.random()*symbols.length)];
+    }, 100 + i*30); // リールごとに微妙に速度差
+  }
+}
 
-  reels.forEach((reel, index) => {
-    let spins = 10 + Math.floor(Math.random() * 10); // くるくる回る回数
-    let currentIndex = 0;
-    let interval = setInterval(() => {
-      reel.innerText = symbols[currentIndex % symbols.length];
-      currentIndex++;
-      spins--;
-      if (spins <= 0) {
-        clearInterval(interval);
-      }
-    }, 100 + index*50); // リールごとに速度を少しずらす
-  });
+function stopReel(index){
+  if(spinning[index]){
+    clearInterval(intervals[index]);
+    spinning[index] = false;
+    checkResult();
+  }
+}
 
-  // 結果判定は少し遅らせる
-  setTimeout(() => {
-    const final = reels.map(r => r.innerText);
-    let result;
-    if(final[0] === final[1] && final[1] === final[2]){
-      result = "🎉 BIG WIN! 🎉";
-    } else {
-      result = "ハズレ…";
-    }
-    document.getElementById('result').innerText = result;
-  }, 1500);
+function checkResult(){
+  if(spinning.some(s => s)) return; // まだ回っているリールがある
+  const final = reels.map(r => r.innerText);
+  if(final[0] === final[1] && final[1] === final[2]){
+    document.getElementById('result').innerText = "🎉 BIG WIN! 🎉";
+    document.getElementById('gogoLamp').classList.add('on');
+  } else {
+    document.getElementById('result').innerText = "ハズレ…";
+  }
 }
 </script>
 
