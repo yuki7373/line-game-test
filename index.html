@@ -157,8 +157,17 @@ function checkResult(){
   document.querySelectorAll('.reel-inner').forEach((reel,idx)=>{
     let row=Math.floor(positions[idx]/rowHeight)+1; // 中央行
     let symbol=reel.children[row % symbols.length].innerText;
+
+    // 7の時だけ特定文字に置き換え
+    if(symbol==='7'){
+      if(idx===0) symbol='り'; // 左リール
+      if(idx===1) symbol='ん'; // 中リール
+      if(idx===2) symbol='か'; // 右リール
+    }
+
     final.push(symbol);
   });
+
   if(final[0]===final[1] && final[1]===final[2]){
     document.getElementById('result').innerText="🎉 BIG WIN! 🎉";
     document.getElementById('gogoLamp').classList.add('on');
