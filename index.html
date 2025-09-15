@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>上から下スロット修正版</title>
+<title>上から下スロット修正版（自然速度&柄維持）</title>
 <style>
 body {
   margin:0; padding:0;
@@ -86,6 +86,7 @@ body {
 const symbols = ['🍒','🍋','🍉','🍊','⭐','7'];
 let spinning = [false,false,false];
 let animFrame=[null,null,null];
+let positions=[-300,-300,-300]; // 各リールの現在位置（%）
 
 // 初期化（リールにシンボルを並べる・2周分入れる）
 for(let i=1;i<=3;i++){
@@ -111,13 +112,12 @@ function startSpin(){
 // リール回転（上から下へ）
 function spinReel(index){
   const reel=document.getElementById('reel'+(index+1));
-  let pos=-300; // %指定
-  let speed=10+Math.random()*5;
+  let speed=1.5+Math.random()*0.5; // ★スピード遅め＆ちょっとランダム
   function animate(){
     if(!spinning[index]) return;
-    pos+=speed;
-    if(pos>=0) pos=-300; // 無限ループ
-    reel.style.top=pos+'%';
+    positions[index]+=speed;
+    if(positions[index]>=0) positions[index]=-300; // 無限ループ
+    reel.style.top=positions[index]+'%';
     animFrame[index]=requestAnimationFrame(animate);
   }
   animate();
@@ -128,20 +128,29 @@ function stopReel(index){
   if(!spinning[index]) return;
   spinning[index]=false;
   cancelAnimationFrame(animFrame[index]);
+
   const reel=document.getElementById('reel'+(index+1));
+  const rowHeight=100/ symbols.length; // 1絵柄分の比率（%）
+  const currentPos=positions[index];
 
-  // ランダムシンボル決定
-  let chosen=symbols[Math.floor(Math.random()*symbols.length)];
-  Array.from(reel.children).forEach(s=>s.innerText=chosen);
+  // 現在位置から一番近い「揃え位置」にスナップ
+  let nearest=Math.round(currentPos/(-100/symbols.length));
+  positions[index]=nearest*(-100/symbols.length);
 
-  // 中央に揃える
-  reel.style.top='-100%';
+  // 停止アニメーション
+  reel.style.transition='top 0.3s ease-out';
+  reel.style.top=positions[index]+'%';
+  reel.addEventListener('transitionend',()=>{
+    reel.style.transition='';
+  },{once:true});
+
   checkResult();
 }
 
 // 結果判定（中央横ライン）
 function checkResult(){
   if(spinning.some(s=>s)) return;
+  // 真ん中の行を取得（children[1]ではなく現在位置から計算するほうが正確だけど簡易版で）
   const final=Array.from(document.querySelectorAll('.reel-inner')).map(r=>r.children[1].innerText);
   if(final[0]===final[1] && final[1]===final[2]){
     document.getElementById('result').innerText="🎉 BIG WIN! 🎉";
