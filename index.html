@@ -99,7 +99,7 @@ function initReels(){
       symbols.forEach(s=>{
         const div=document.createElement('div');
         div.innerText=s;
-        reel.insertBefore(div, reel.firstChild);
+        reel.appendChild(div);
       });
     }
   }
