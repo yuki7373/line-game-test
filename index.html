@@ -92,7 +92,7 @@ const reelLength = symbols.length * rowHeight * 2; // 2周分
 
 // 初期化：リールにシンボルを2回繰り返しで配置
 function initReels(){
-  for(let i=0;i<=3;i++){
+  for(let i=1;i<=3;i++){
     const reel=document.getElementById('reel'+i);
     reel.innerHTML='';
     for(let r=0;r<2;r++){
