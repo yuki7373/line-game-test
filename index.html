@@ -98,7 +98,7 @@ function initReels(){
         reel.appendChild(div);
       });
     }
-    reel.style.transform = `translateY(-${reelHeight}px)`;
+    reel.style.transform = `translateY(0px)`;
   }
 }
 initReels();
@@ -115,20 +115,19 @@ function startSpin(){
 
 function spinReel(index){
   const reel = document.getElementById('reel'+(index+1));
-  let pos = 0; // 上端からスタート
-  const speed = 2 + Math.random()*1;
+  let pos = 0; 
+  const speed = 5 + Math.random()*2;
 
   function animate(){
     if(!spinning[index]) return;
-    pos += speed; // posを増やすと下方向に流れる
+    pos -= speed; // 減らすと下方向に流れる
     const totalHeight = symbols.length*reelHeight;
-    if(pos >= totalHeight) pos = 0;
-    reel.style.transform = `translateY(-${pos}px)`; // マイナスで上端基準
+    if(pos <= -totalHeight) pos = 0;
+    reel.style.transform = `translateY(${pos}px)`;
     animFrame[index] = requestAnimationFrame(animate);
   }
   animate();
 }
-
 
 // STOPボタン
 function stopReel(index){
@@ -137,19 +136,22 @@ function stopReel(index){
   cancelAnimationFrame(animFrame[index]);
   const reel = document.getElementById('reel'+(index+1));
 
-  // 現在位置に最も近い中央絵柄に合わせる
-  const currentY = parseFloat(reel.style.transform.replace('translateY(','').replace('px)',''));
-  let nearestIndex = Math.round(-currentY/reelHeight) % symbols.length;
-  if(nearestIndex<0) nearestIndex += symbols.length;
+  // 現在位置
+  const currentY = parseFloat(reel.style.transform.replace('translateY(','').replace('px)','')) || 0;
+  const totalHeight = symbols.length * reelHeight;
 
-  // 中央に来るように再配置
+  // 一番近い目を中央に揃える
+  let nearest = Math.round(-currentY / reelHeight);
+  if(nearest < 0) nearest += symbols.length;
+
+  // 子要素の中身を並べ替えて中央に止める
   Array.from(reel.children).forEach((c,i)=>{
-    c.innerText = symbols[(nearestIndex + i) % symbols.length];
+    c.innerText = symbols[(nearest + i) % symbols.length];
   });
 
-  // 中央ラインにスムーズに停止
-  reel.style.transition = 'transform 0.5s ease-out';
-  reel.style.transform = `translateY(-${reelHeight}px)`;
+  // ぴったり中央にアニメーションして止める
+  reel.style.transition = 'transform 0.4s ease-out';
+  reel.style.transform = `translateY(${-reelHeight}px)`;
   reel.addEventListener('transitionend', ()=>{
     reel.style.transition = '';
   }, {once:true});
