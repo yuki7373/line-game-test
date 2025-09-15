@@ -122,8 +122,8 @@ function spinReel(index){
   let speed=2+Math.random()*1;
   function animate(){
     if(!spinning[index]) return;
-    positions[index]+=speed;
-    if(positions[index]>=reelLength/2) positions[index]=0; // ループ
+    positions[index]-=speed;
+    if(positions[index] <= -reelLength/2) positions[index]=0; // ループ
     reel.style.top=(-positions[index])+'px';
     animFrame[index]=requestAnimationFrame(animate);
   }
