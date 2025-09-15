@@ -19,7 +19,7 @@ body {
 }
 .reels {
   display:flex; justify-content:space-between;
-  margin-bottom:10px; height:180px; /* 3行分 */
+  margin-bottom:10px; height:180px;
   overflow:hidden;
   border:3px solid #555; border-radius:10px; background:#000;
 }
@@ -83,20 +83,26 @@ body {
 </div>
 
 <script>
-const symbols = ['🍒','🍋','🍉','🍊','⭐','7'];
+// 左・中・右それぞれのリール用シンボル
+const reelSymbols = [
+  ['🍒','🍋','🍉','🍊','⭐','り'], // 左
+  ['🍒','🍋','🍉','🍊','⭐','ん'], // 中
+  ['🍒','🍋','🍉','🍊','⭐','か']  // 右
+];
+
 let spinning = [false,false,false];
 let animFrame=[null,null,null];
 let positions=[0,0,0];
 const rowHeight = 60;
-const reelLength = symbols.length * rowHeight * 2; // 2周分
+const reelLength = reelSymbols[0].length * rowHeight * 2; // 2周分
 
-// 初期化：リールにシンボルを2回繰り返しで配置
+// 初期化
 function initReels(){
-  for(let i=1;i<=3;i++){
-    const reel=document.getElementById('reel'+i);
+  for(let i=0;i<3;i++){
+    const reel=document.getElementById('reel'+(i+1));
     reel.innerHTML='';
     for(let r=0;r<2;r++){
-      symbols.forEach(s=>{
+      reelSymbols[i].forEach(s=>{
         const div=document.createElement('div');
         div.innerText=s;
         reel.appendChild(div);
@@ -120,6 +126,7 @@ function startSpin(){
 function spinReel(index){
   const reel=document.getElementById('reel'+(index+1));
   let speed=2+Math.random()*1;
+
   function animate(){
     if(!spinning[index]) return;
     positions[index]+=speed;
@@ -138,7 +145,7 @@ function stopReel(index){
 
   const reel=document.getElementById('reel'+(index+1));
   const pos=positions[index];
-  let nearest=Math.round(pos/rowHeight); // 最寄り行
+  let nearest=Math.round(pos/rowHeight);
   positions[index]=nearest*rowHeight;
 
   reel.style.transition='top 0.3s ease-out';
@@ -150,25 +157,20 @@ function stopReel(index){
   checkResult();
 }
 
-// 結果判定（中央行を比較）
+// 結果判定
 function checkResult(){
   if(spinning.some(s=>s)) return;
   const final=[];
   document.querySelectorAll('.reel-inner').forEach((reel,idx)=>{
-    let row=Math.floor(positions[idx]/rowHeight)+1; // 中央行
-    let symbol=reel.children[row % symbols.length].innerText;
-
-    // 7の時だけ特定文字に置き換え
-    if(symbol==='7'){
-      if(idx===0) symbol='り'; // 左リール
-      if(idx===1) symbol='ん'; // 中リール
-      if(idx===2) symbol='か'; // 右リール
-    }
-
+    let row=Math.floor(positions[idx]/rowHeight)+1;
+    let symbol=reel.children[row % reel.children.length].innerText;
     final.push(symbol);
   });
 
-  if(final[0]===final[1] && final[1]===final[2]){
+  const rinKaWin = final[0]==='り' && final[1]==='ん' && final[2]==='か';
+
+  // 全て同じシンボル、またはりんか揃いでBIG WIN
+  if(final[0]===final[1] && final[1]===final[2] || rinKaWin){
     document.getElementById('result').innerText="🎉 BIG WIN! 🎉";
     document.getElementById('gogoLamp').classList.add('on');
   }else{
